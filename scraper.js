@@ -1,5 +1,5 @@
 import { launch } from 'puppeteer';
-import CSSKey from './CSSKey.json';// elemento CSS en cada pagina para poder encontrar el ultimo cap 
+import CSSKey from './CSSKey.json' with { type: "json"};// elemento CSS en cada pagina para poder encontrar el ultimo cap 
 
 const url1 = 'https://zonatmo.com/library/manhwa/71354/jugador-que-regreso-10000-anos-despues';
 const url2 = 'https://zonaolympus.com/series/comic-sabueso13424'
