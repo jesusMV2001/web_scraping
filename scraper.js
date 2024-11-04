@@ -1,5 +1,5 @@
-const puppeteer = require('puppeteer');
-const CSSKey = require('./CSSKey.json')// elemento CSS en cada pagina para poder encontrar el ultimo cap 
+import { launch } from 'puppeteer';
+import CSSKey from './CSSKey.json';// elemento CSS en cada pagina para poder encontrar el ultimo cap 
 
 const url1 = 'https://zonatmo.com/library/manhwa/71354/jugador-que-regreso-10000-anos-despues';
 const url2 = 'https://zonaolympus.com/series/comic-sabueso13424'
@@ -7,7 +7,7 @@ const url2 = 'https://zonaolympus.com/series/comic-sabueso13424'
 async function comprobarUltimoCapitulo(url, pagina) {
     let browser;
     try{
-        browser = await puppeteer.launch();
+        browser = await launch();
         const page = await browser.newPage();
         await page.goto(url, { waitUntil: 'networkidle2' });
 
