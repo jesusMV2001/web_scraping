@@ -1,7 +1,7 @@
 import { launch } from 'puppeteer';
 import CSSKey from './CSSKey.json' with { type: "json"};// elemento CSS en cada pagina para poder encontrar el ultimo cap 
 
-async function comprobarUltimoCapitulo(url) {
+export async function comprobarUltimoCapitulo(url) {
     let browser, ultimoCap;
     try{
         browser = await launch();
@@ -18,7 +18,5 @@ async function comprobarUltimoCapitulo(url) {
     }finally{
         await browser.close();
     }
-    return ultimoCap;
+    return ultimoCap.trim().split(' ')[1];
 }
-
-export default comprobarUltimoCapitulo;
