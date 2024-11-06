@@ -10,31 +10,29 @@ export const crearTablas = async () => {
       `CREATE TABLE IF NOT EXISTS manga (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         url TEXT NOT NULL,
-        ultimoCap DECIMAL(10, 2))`
+        ultimoCap DECIMAL(10, 2)
+      )`
     );
   } catch (error) {
     console.log(error);
   }
 };
 
-export const fetchData = async ( res, sql) => {
-  db.all(sql, [], (err, rows) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-    } else {
-      res.json(rows);
-    }
+// Función generica para realizar queries y devolver una promesa
+export const fetchData = async (sql) => {
+  return new Promise((resolve, reject) => {
+    db.all(sql, [], (err, rows) => {
+      if (err) reject(err);
+      resolve(rows);
+    });
   });
 };
 
-export const insertData = async ( res, sql, params) => {
-  db.run(sql, params ,
-    function (err) {
-      if (err) {
-        res.status(500).json({ error: err.message });
-      } else {
-        res.status(201).json({ id: this.lastID });
-      }
-    }
-  );
-}
+export const insertData = async (sql, params) => {
+  return new Promise((resolve, reject) => {
+    db.run(sql, params, function (err) {
+      if (err) reject(err);
+      resolve(this.lastID);
+    });
+  });
+};
