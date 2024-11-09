@@ -27,11 +27,28 @@ export const fetchData = async (sql) => {
   });
 };
 
-export const insertData = async (sql, params) => {
+export const executeQuery = async (sql, params) => {
   return new Promise((resolve, reject) => {
     db.run(sql, params, function (err) {
-      if (err) reject(err);
-      resolve(this.lastID);
+      if (err) {
+        reject(err);
+      } else {
+        resolve(this.changes); // Devuelve el número de filas afectadas
+      }
+    });
+  });
+};
+
+export const deleteData = async (url) => {
+  const sql = `DELETE FROM manga WHERE url = ?`;
+
+  return new Promise((resolve, reject) => {
+    db.run(sql, url, function (err) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(this.changes); // Número de filas afectadas
+      }
     });
   });
 };

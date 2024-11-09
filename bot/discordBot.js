@@ -9,10 +9,10 @@ client.once('ready', () => {
   console.log(`Bot de Discord conectado como ${client.user.tag}`);
 });
 
-export async function enviarNotificacion(manga) {
+export async function enviarNotificacion(url, ultimoCap) {
     try {
       const channel = await client.channels.fetch(CHANNEL_ID);
-      await channel.send(`¡Nuevo capítulo disponible! **${manga.url}**: Capítulo ${manga.ultimoCap}`);
+      await channel.send(`¡Nuevo capítulo disponible! **${url}**: Capítulo ${ultimoCap}`);
     } catch (error) {
       console.error("Error al enviar la notificación de Discord:", error);
     }

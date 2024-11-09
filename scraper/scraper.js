@@ -11,12 +11,11 @@ export async function comprobarUltimoCapitulo(url) {
         //obtiene el ultimo capitulo
         let nombrePag = url.trim().split('/')[2];
         ultimoCap = await page.$eval(CSSKey[nombrePag], el => el.textContent);
-        
     }catch (error){
         console.log(error);
         ultimoCap = -1;
     }finally{
         await browser.close();
     }
-    return ultimoCap.trim().split(' ')[1];
+    return ultimoCap.match(/\d+(\.\d+)?/)[0];
 }

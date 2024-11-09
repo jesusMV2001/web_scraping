@@ -1,4 +1,4 @@
-import { crearTablas, fetchData, insertData } from "./db/database.js"
+import { crearTablas, fetchData, executeQuery } from "./db/database.js"
 import { iniciarServidor } from "./api/api.js";
 import { comprobarUltimoCapitulo } from "./scraper/scraper.js"
 import { enviarNotificacion } from "./bot/discordBot.js";
@@ -17,9 +17,9 @@ async function verificarNuevosCapitulos() {
         let ultimo = await comprobarUltimoCapitulo(manga.url);
         if (manga.ultimoCap < ultimo){
             console.log("hay nuevo cap");
-            await enviarNotificacion(manga);
+            await enviarNotificacion(manga.url,ultimo);
             try{
-                await insertData(
+                await executeQuery(
                     `UPDATE manga SET ultimoCap = ? WHERE url = ?`, // sentencia sql
                     [ultimo, manga.url] // Parametros marcados con ?
                 );
