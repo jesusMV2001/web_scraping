@@ -33,9 +33,9 @@ export const crearTablas = async () => {
   }
 };
 
-export const fetchData = async (sql) => {
+export const fetchData = async (sql, params) => {
   return new Promise((resolve, reject) => {
-    db.all(sql, [], (err, rows) => {
+    db.all(sql, params, (err, rows) => {
       if (err) reject(err);
       resolve(rows);
     });

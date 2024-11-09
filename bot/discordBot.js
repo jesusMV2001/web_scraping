@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, Message, REST, Routes, SlashCommandBuilder  } from 'discord.js';
+import { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder  } from 'discord.js';
 import CREDENCIALES from './credencialesBot.json' with {type: "json"}
 import { executeQuery, fetchData } from '../db/database.js';
 
@@ -10,10 +10,15 @@ client.once('ready', () => {
   console.log(`Bot de Discord conectado como ${client.user.tag}`);
 });
 
-export async function enviarNotificacion(url, ultimoCap) {
+export async function enviarNotificacion(url, ultimoCap, usuarios) {
+  let mensaje = '';
     try {
       const channel = await client.channels.fetch(CHANNEL_ID);
-      await channel.send(`¡Nuevo capítulo disponible! **${url}**: Capítulo ${ultimoCap}`);
+      mensaje += `¡Nuevo capítulo disponible! **${url}**: Capítulo ${ultimoCap}\n`;
+      for (let user of usuarios){
+        mensaje += `<@${user.usuario_id}>`;
+      }
+      await channel.send(mensaje);
     } catch (error) {
       console.error("Error al enviar la notificación de Discord:", error);
     }

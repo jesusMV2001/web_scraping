@@ -17,7 +17,8 @@ async function verificarNuevosCapitulos() {
         let ultimo = await comprobarUltimoCapitulo(manga.url);
         if (manga.ultimoCap < ultimo){
             console.log("hay nuevo cap");
-            await enviarNotificacion(manga.url,ultimo);
+            let listaUsuarios = await fetchData(`SELECT usuario_id FROM manga_usuario WHERE manga_url=?`,[manga.url]);
+            await enviarNotificacion(manga.url,ultimo,listaUsuarios);
             try{
                 await executeQuery(
                     `UPDATE manga SET ultimoCap = ? WHERE url = ?`, // sentencia sql

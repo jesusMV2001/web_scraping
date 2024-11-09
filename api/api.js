@@ -26,7 +26,7 @@ app.post('/mangas', async (req, res) => {
   }
 });
 
-// actualizar manga TODO 
+// actualizar manga TODO actualizar tambien tabla manga_usuario
 app.patch('/mangas/:url', async (req, res) => {
   const { url } = req.params;
   const { ultimoCap } = req.body;
