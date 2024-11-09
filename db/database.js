@@ -8,8 +8,7 @@ export const crearTablas = async () => {
     await execute(
       db,
       `CREATE TABLE IF NOT EXISTS manga (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        url TEXT NOT NULL,
+        url TEXT PRIMARY KEY,
         ultimoCap DECIMAL(10, 2)
       )`
     );

@@ -17,11 +17,16 @@ async function verificarNuevosCapitulos() {
         let ultimo = await comprobarUltimoCapitulo(manga.url);
         if (manga.ultimoCap < ultimo){
             console.log("hay nuevo cap");
-            //await enviarNotificacion(manga);
-            insertData(
-                `UPDATE manga SET ultimoCap = ? WHERE id = ?`, // sentencia sql
-                [ultimo, manga.id] // Parametros marcados con ?
-            );
+            await enviarNotificacion(manga);
+            try{
+                await insertData(
+                    `UPDATE manga SET ultimoCap = ? WHERE url = ?`, // sentencia sql
+                    [ultimo, manga.url] // Parametros marcados con ?
+                );
+            }catch(error){
+                console.error(error)
+            }
+            
         }else
             console.log("no hay nuevo cap");
     }

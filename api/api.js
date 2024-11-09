@@ -26,6 +26,25 @@ app.post('/mangas', async (req, res) => {
   }
 });
 
+// actualizar manga
+app.patch('/mangas/:url', (req, res) =>{
+  const { url } = req.params;
+  const { ultimoCap } = req.body;
+  const sql = `UPDATE manga SET ultimoCap = ? WHERE url = ?`
+
+  try{
+    insertData(sql, [ultimoCap, url]);
+  }catch (error){
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/*
+app.delete('/mangas/:id', (req, res) => {
+
+});
+*/
+
 export function iniciarServidor() {
   app.listen(PORT, () => {
     console.log(`Servidor esperando en el puerto ${PORT}`);
