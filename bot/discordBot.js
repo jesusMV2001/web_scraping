@@ -1,5 +1,5 @@
 import { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder  } from 'discord.js';
-import CREDENCIALES from './credencialesBot.json' with {type: "json"}
+import CREDENCIALES from '../etc/secrets/credencialesBot.json' with {type: "json"}
 import { executeQuery, fetchData } from '../db/database.js';
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] });
