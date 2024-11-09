@@ -1,5 +1,5 @@
 import express from "express";
-import { deleteData, fetchData, executeQuery } from "../db/database.js";
+import { fetchData, executeQuery } from "../db/database.js";
 
 const app = express();
 const PORT = 3000;
@@ -26,7 +26,7 @@ app.post('/mangas', async (req, res) => {
   }
 });
 
-// actualizar manga
+// actualizar manga TODO 
 app.patch('/mangas/:url', async (req, res) => {
   const { url } = req.params;
   const { ultimoCap } = req.body;
@@ -48,8 +48,9 @@ app.delete('/mangas/:url', async (req, res) => {
   const { url } = req.params;
 
   try {
-    const cambios = await deleteData(url);
+    const cambios = await executeQuery(`DELETE FROM manga WHERE url=?` ,[url]);
     if (cambios > 0) {
+      await executeQuery(`DELETE FROM manga_usuario WHERE manga_url=?`, [url]);
       res.status(200).json({ message: "Manga eliminado correctamente" });
     } else {
       res.status(404).json({ message: "Manga no encontrado" });

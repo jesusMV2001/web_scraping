@@ -12,6 +12,22 @@ export const crearTablas = async () => {
         ultimoCap DECIMAL(10, 2)
       )`
     );
+    await execute(
+      db, 
+      `CREATE TABLE IF NOT EXISTS usuario(
+        id TEXT PRIMARY KEY
+      )`
+    );
+    await execute(
+      db,
+      `CREATE TABLE IF NOT EXISTS manga_usuario (
+        manga_url TEXT,
+        usuario_id TEXT,
+        PRIMARY KEY (manga_url, usuario_id),
+        FOREIGN KEY (manga_url) REFERENCES manga(url),
+        FOREIGN KEY (usuario_id) REFERENCES usuario(id)
+      )`
+    );
   } catch (error) {
     console.log(error);
   }
@@ -33,20 +49,6 @@ export const executeQuery = async (sql, params) => {
         reject(err);
       } else {
         resolve(this.changes); // Devuelve el número de filas afectadas
-      }
-    });
-  });
-};
-
-export const deleteData = async (url) => {
-  const sql = `DELETE FROM manga WHERE url = ?`;
-
-  return new Promise((resolve, reject) => {
-    db.run(sql, url, function (err) {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(this.changes); // Número de filas afectadas
       }
     });
   });

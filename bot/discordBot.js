@@ -1,6 +1,6 @@
-import { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder  } from 'discord.js';
+import { Client, GatewayIntentBits, Message, REST, Routes, SlashCommandBuilder  } from 'discord.js';
 import CREDENCIALES from './credencialesBot.json' with {type: "json"}
-import { executeQuery, deleteData, fetchData } from '../db/database.js';
+import { executeQuery, fetchData } from '../db/database.js';
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] });
 const TOKEN = CREDENCIALES.TOKEN;
@@ -12,9 +12,8 @@ client.once('ready', () => {
 
 export async function enviarNotificacion(url, ultimoCap) {
     try {
-      const userId = '395587954212601856';
       const channel = await client.channels.fetch(CHANNEL_ID);
-      await channel.send(`<@${userId}> ¡Nuevo capítulo disponible! **${url}**: Capítulo ${ultimoCap}`);
+      await channel.send(`¡Nuevo capítulo disponible! **${url}**: Capítulo ${ultimoCap}`);
     } catch (error) {
       console.error("Error al enviar la notificación de Discord:", error);
     }
@@ -22,7 +21,7 @@ export async function enviarNotificacion(url, ultimoCap) {
 
 const commands = [
   new SlashCommandBuilder()
-    .setName('añadir')
+    .setName('añadirmanga')
     .setDescription('Añadir un nuevo manga a la base de datos')
     .addStringOption(option => 
       option.setName('url')
@@ -33,7 +32,7 @@ const commands = [
         .setDescription('Número del último capítulo')
         .setRequired(true)),
   new SlashCommandBuilder()
-    .setName('borrar')
+    .setName('borrarmanga')
     .setDescription('Borrar un manga de la base de datos')
     .addStringOption(option => 
       option.setName('url')
@@ -62,35 +61,56 @@ client.on('interactionCreate', async interaction => {
   if (!interaction.isCommand()) return;
 
   const { commandName } = interaction;
+  const userId = interaction.user.id;
+  let mensaje = '';
 
   switch (commandName) {
-    case 'añadir':
+    case 'añadirmanga':
       const url = interaction.options.getString('url');
       const ultimoCap = interaction.options.getNumber('ultimocap');
-      
+      mensaje = '';
+
       try {
         // Llama a la función de base de datos para añadir el manga
-        const cambios = await executeQuery(`INSERT INTO manga (url, ultimoCap) VALUES (?, ?)`, [url, ultimoCap]);
+        let cambios = await executeQuery(`INSERT INTO manga (url, ultimoCap) VALUES (?, ?)`, [url, ultimoCap]);
+        // si se añade lo indica al usuario, sino es porque ya existia ese manga
         if (cambios > 0) 
-          await interaction.reply(`Manga añadido: ${url} con capítulo ${ultimoCap}`);
+          mensaje += `Manga añadido: ${url} con capítulo ${ultimoCap}\n` ;
+
+        // ahora hay que suscribir al usuario para las notificaiones
+        //primero comprobar si ese usuario esta en la tabla usuario
+        let existeUsuario = await fetchData(`SELECT id FROM usuario WHERE id=${userId}`);
+        if(existeUsuario.length === 0){
+          await executeQuery(`INSERT INTO usuario (id) VALUES (?)`, [userId]);
+          mensaje += `Se te ha añadido a la base de usuarios\n`;
+        }
+        //ahora crear la relacion
+        cambios = await executeQuery(`INSERT INTO manga_usuario (manga_url, usuario_id) VALUES (?, ?)`, [url, userId]);
+        if(cambios > 0) mensaje += `<@${userId}> se te notificará cuando haya un nuevo capítulo`;
+        await interaction.reply(mensaje)
+
       } catch (error) {
         console.error(error);
         await interaction.reply('Hubo un error al añadir el manga. Probablemente ya este añadido, usa el comando verMangas para comprobarlo.');
       }
       break;
 
-    case 'borrar':
+    case 'borrarmanga':
       const urlBorrar = interaction.options.getString('url');
+      mensaje = '';
 
       try {
-        const cambios = await deleteData(urlBorrar);
-        if (cambios > 0) {
-          await interaction.reply(`Manga borrado: ${urlBorrar}`);
-        } else {
-          await interaction.reply('No existe un manga con esa url.');
-        }
+        let sql = `DELETE FROM manga WHERE url=?`
+        let cambios = await executeQuery(sql, [urlBorrar]);
+        if (cambios > 0) 
+          mensaje += `Manga borrado: ${urlBorrar}\n`;
+        
+        sql = `DELETE FROM manga_usuario WHERE manga_url=?`
+        cambios = await executeQuery(sql, [urlBorrar]);
+        if (cambios > 0) 
+          await interaction.reply(mensaje);
       } catch (error) {
-        await interaction.reply('Hubo un error al borrar el manga.');
+        await interaction.reply('Hubo un error al borrar el manga.'+error);
       }
       break;
 

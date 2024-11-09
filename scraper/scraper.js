@@ -13,7 +13,7 @@ export async function comprobarUltimoCapitulo(url) {
         ultimoCap = await page.$eval(CSSKey[nombrePag], el => el.textContent);
     }catch (error){
         console.log(error);
-        ultimoCap = -1;
+        ultimoCap = "-1";
     }finally{
         await browser.close();
     }
