@@ -17,7 +17,6 @@ export const crearTablas = async () => {
   }
 };
 
-// Función generica para realizar queries y devolver una promesa
 export const fetchData = async (sql) => {
   return new Promise((resolve, reject) => {
     db.all(sql, [], (err, rows) => {
