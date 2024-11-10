@@ -46,6 +46,23 @@ const commands = [
   new SlashCommandBuilder()
     .setName('vermangas')
     .setDescription('ver todos los mangas disponibles'),
+  new SlashCommandBuilder()
+      .setName('verseguidos')
+      .setDescription('ver todos los mangas disponibles'),
+  new SlashCommandBuilder()
+    .setName("follow")
+    .setDescription('seguir un manga de la base de datos')
+    .addStringOption(option =>
+      option.setName('url')
+        .setDescription('URL del manga a seguir')
+        .setRequired(true)),
+  new SlashCommandBuilder()
+      .setName("unfollow")
+      .setDescription('Dejar de seguir un manga en la base de datos')
+      .addStringOption(option =>
+          option.setName('url')
+              .setDescription('URL del manga')
+              .setRequired(true)),
 ];
 
 const rest = new REST({ version: '10' }).setToken(CREDENCIALES.TOKEN);
@@ -76,6 +93,8 @@ client.on('interactionCreate', async interaction => {
       mensaje = '';
 
       try {
+        // Primero comprobar si es un url valido
+        if(!isValidUrl(url)) return await interaction.reply("Introduce un url válido.");
         // Llama a la función de base de datos para añadir el manga
         let cambios = await executeQuery(`INSERT INTO manga (url, ultimoCap) VALUES (?, ?)`, [url, ultimoCap]);
         // si se añade lo indica al usuario, sino es porque ya existia ese manga
@@ -84,20 +103,22 @@ client.on('interactionCreate', async interaction => {
 
         // ahora hay que suscribir al usuario para las notificaiones
         //primero comprobar si ese usuario esta en la tabla usuario
-        let existeUsuario = await fetchData(`SELECT id FROM usuario WHERE id=${userId}`);
-        if(existeUsuario.length === 0){
-          await executeQuery(`INSERT INTO usuario (id) VALUES (?)`, [userId]);
-          mensaje += `Se te ha añadido a la base de usuarios\n`;
-        }
+        mensaje += await comprobarUsuario(userId);
+
         //ahora crear la relacion
         cambios = await executeQuery(`INSERT INTO manga_usuario (manga_url, usuario_id) VALUES (?, ?)`, [url, userId]);
         if(cambios > 0) mensaje += `<@${userId}> se te notificará cuando haya un nuevo capítulo`;
         await interaction.reply(mensaje)
 
-      } catch (error) {
-        console.error(error);
-        await interaction.reply('Hubo un error al añadir el manga. Probablemente ya este añadido, usa el comando verMangas para comprobarlo.');
+      }catch (error) {
+        if (error.message.includes("UNIQUE constraint failed")) {
+          return interaction.reply("Ya existe ese manga.");
+        } else {
+          console.error(error);
+          return interaction.reply('Hubo un error al añadir el manga. '+error);
+        }
       }
+
       break;
 
     case 'borrarmanga':
@@ -105,16 +126,19 @@ client.on('interactionCreate', async interaction => {
       mensaje = '';
 
       try {
+        // Primero comprobar si existe el manga en la bd
+        if(  ! await comprobarManga(urlBorrar, interaction)) break;
+
+        // Despues borrar el manga de la bd
         let sql = `DELETE FROM manga WHERE url=?`
         let cambios = await executeQuery(sql, [urlBorrar]);
         if (cambios > 0) 
           mensaje += `Manga borrado: ${urlBorrar}\n`;
-        
+
+        // Por último borrar todas las relaciones de ese manga con usuarios
         sql = `DELETE FROM manga_usuario WHERE manga_url=?`
-        cambios = await executeQuery(sql, [urlBorrar]);
-        if (cambios > 0) 
-          await interaction.reply(mensaje);
-      } catch (error) {
+        executeQuery(sql, [urlBorrar]).then(interaction.reply(mensaje));
+      }catch (error) {
         await interaction.reply('Hubo un error al borrar el manga.'+error);
       }
       break;
@@ -131,10 +155,101 @@ client.on('interactionCreate', async interaction => {
         await interaction.reply(mensaje || 'No hay mangas en la base de datos.');
       } catch (error) {
         console.error(error);
-        await interaction.reply('Hubo un error al mostrar los mangas.');
+        await interaction.reply('Hubo un error al mostrar los mangas. '+error);
       }
+      break;
+
+    case 'follow':
+      try {
+        const url = interaction.options.getString('url');
+        mensaje = '';
+
+        // Primero comprueba si el usuario esta en la base de datos
+        mensaje += await comprobarUsuario(userId);
+
+        // Ahora hay que comprobar si el manga existe
+        if(  ! await comprobarManga(url, interaction)) break;
+
+        //después se añade a la tabla de manga_usuario
+        await executeQuery(`INSERT INTO manga_usuario (manga_url, usuario_id) VALUES (?, ?)`, [url, userId]);
+        await interaction.reply(mensaje+`<@${userId}> se te notificará cuando haya un episodio.`);
+      }catch (error) {
+        if (error.message.includes("UNIQUE constraint failed")) {
+          return interaction.reply("Ya seguías ese manga, no puedes volver a seguirlo.");
+        } else {
+          console.error(error);
+          return interaction.reply('Hubo un error al seguir el manga.');
+        }
+      }
+      break;
+
+    case 'unfollow':
+      try {
+        const url = interaction.options.getString('url');
+        mensaje = '';
+
+        // Primero comprueba si el usuario esta en la base de datos
+        mensaje += await comprobarUsuario(userId);
+
+        // Ahora hay que comprobar si el manga existe
+        if(  ! await comprobarManga(url, interaction)) break;
+
+        // Despues de asegurarse que existe borrar la relacion
+        let sql = `DELETE FROM manga_usuario WHERE manga_url=?`
+        executeQuery(sql, [url]).then(value => {
+          if(value === 0)
+            interaction.reply(mensaje+ 'No seguias este manga.');
+          else
+            interaction.reply(mensaje+ `Has dejado de seguir el manga: ${url}`);
+        });
+      }catch(error){
+        console.error(error);
+        await interaction.reply('Hubo un error al dejar de seguir el manga. '+error);
+      }
+      break;
+
+    case 'verseguidos':
+
       break;
   }
 });
+
+/**
+ * Comprueba si existe en la base y sino lo añade
+ *
+ * @return {Promise<string>} devuelve el mensaje indicando si se a añadido el usuario
+ */
+async function comprobarUsuario(userId) {
+  let existeUsuario = await fetchData(`SELECT id FROM usuario WHERE id=${userId}`);
+  if (existeUsuario.length === 0) {
+    await executeQuery(`INSERT INTO usuario (id) VALUES (?)`, [userId]);
+    return `Se te ha añadido a la base de usuarios\n`;
+  }
+  return '';
+}
+
+/**
+ * Comprueba si existe el manga en la bd
+ *
+ * @returns {Promise<boolean>} true si existe sino false
+ */
+async function comprobarManga(url, interaction){
+  let existeManga = await fetchData(`SELECT url FROM manga WHERE url=?`,[url]);
+  if(existeManga.length === 0) {
+    await interaction.reply("No existe ese manga en la base de datos");
+    return false;
+  }
+  return true;
+}
+
+const isValidUrl = urlString=> {
+  const urlPattern = new RegExp('^(https?:\\/\\/)?' + // validate protocol
+      '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // validate domain name
+      '((\\d{1,3}\\.){3}\\d{1,3}))' + // validate OR ip (v4) address
+      '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // validate port and path
+      '(\\?[;&a-z\\d%_.~+=-]*)?' + // validate query string
+      '(\\#[-a-z\\d_]*)?$', 'i'); // validate fragment locator
+  return !!urlPattern.test(urlString);
+}
 
 client.login(TOKEN);
