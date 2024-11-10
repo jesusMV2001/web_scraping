@@ -209,7 +209,19 @@ client.on('interactionCreate', async interaction => {
       break;
 
     case 'verseguidos':
+      try {
+        // Llama a la función para obtener todos los mangas de la base de datos
+        const mangas = await fetchData(`SELECT * FROM manga_usuario WHERE usuario_id=?`,[userId]);
 
+        // Formatea los resultados en un solo mensaje
+        const mensaje = mangas.map(manga => `URL: ${manga.manga_url}`).join('\n');
+
+        // Envía el mensaje en Discord
+        await interaction.reply(mensaje || 'No sigues ningún manga.');
+      } catch (error) {
+        console.error(error);
+        await interaction.reply('Hubo un error al mostrar los mangas. '+error);
+      }
       break;
   }
 });
