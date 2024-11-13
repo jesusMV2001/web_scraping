@@ -1,11 +1,10 @@
 import { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder  } from 'discord.js';
-import CREDENCIALES from '../../credencialesBot.json' with {type: "json"}
 import { executeQuery, fetchData } from '../db/database.js';
 import {verificarNuevosCapitulos} from "../index.js";
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] });
-const TOKEN = CREDENCIALES.TOKEN;
-const CHANNEL_ID = CREDENCIALES.CHANNEL_ID; // ID del canal de Discord donde se enviarán las notificaciones
+const TOKEN = process.env.TOKEN
+const CHANNEL_ID = process.env.CHANNEL_ID // ID del canal de Discord donde se enviarán las notificaciones
 
 client.once('ready', () => {
   console.log(`Bot de Discord conectado como ${client.user.tag}`);
@@ -69,12 +68,12 @@ const commands = [
               .setRequired(true)),
 ];
 
-const rest = new REST({ version: '10' }).setToken(CREDENCIALES.TOKEN);
+const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
 (async () => {
   try {
     console.log('Actualizando comandos de aplicación (/)');
     await rest.put(
-      Routes.applicationCommands(CREDENCIALES.ID_CLIENTE),
+      Routes.applicationCommands(process.env.ID_CLIENTE),
       { body: commands }
     );
     console.log('Comandos registrados con éxito.');
