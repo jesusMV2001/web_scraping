@@ -30,9 +30,13 @@ export async function verificarNuevosCapitulos() {
 
     try {
         browser = await launch()
-        for (const manga of mangas) {
+
+        const scrapingPromesas = mangas.map(async (manga) =>{
             await verificarManga(browser, manga);
-        }
+        });
+
+        await Promise.all(scrapingPromesas);
+
     }catch (error) {
         console.log(error);
     }finally {

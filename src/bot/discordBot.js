@@ -238,8 +238,7 @@ client.on('interactionCreate', async interaction => {
         const totalMangas = mangas.length;
         browser = await launch();
 
-        //comprobar si hay un nuevo capitulo en cada manga
-        for (let manga of mangas) {
+        const promesas = mangas.map(async (manga) =>{
           await verificarManga(browser, manga);
 
           mangasComprobados++;
@@ -253,7 +252,9 @@ client.on('interactionCreate', async interaction => {
           if (mangasComprobados % 2 === 0 || mangasComprobados === totalMangas) {
             await interaction.editReply(`Comprobando... [${barra}] ${porcentaje}% (${mangasComprobados}/${totalMangas})`);
           }
-        }
+        });
+
+        await Promise.all(promesas);
       }catch(error){
         console.error(error);
         await interaction.reply('Hubo un error al comprobar el manga. '+error);

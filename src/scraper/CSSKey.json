@@ -1,4 +1,10 @@
 {
-    "zonatmo.com": ".btn-collapse",
-    "zonaolympus.com": "#name"
+    "zonatmo.com": {
+        "css": ".btn-collapse",
+        "waitUntil": "domcontentloaded"
+    },
+    "zonaolympus.com": {
+        "css": "#name",
+        "waitUntil": "networkidle2"
+    }
 }
