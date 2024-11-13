@@ -1,6 +1,8 @@
 import { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder  } from 'discord.js';
 import { executeQuery, fetchData } from '../db/database.js';
-import {verificarNuevosCapitulos} from "../index.js";
+import {comprobarUltimoCapitulo} from "../scraper/scraper.js";
+import {verificarManga} from "../index.js";
+import {launch} from "puppeteer";
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] });
 const TOKEN = process.env.TOKEN
@@ -228,13 +230,35 @@ client.on('interactionCreate', async interaction => {
       break;
 
     case 'comprobar':
+      let browser;
       try {
-        verificarNuevosCapitulos()
-            .then(interaction.reply("Se van a comprobar todos los mangas de la base de datos, esto puede tardar un poco." +
-                " Si hay algun episodio nuevo se notificará."));
+        await interaction.reply("Iniciando la comprobación de mangas...");
+        const mangas = await fetchData(`SELECT * FROM manga`);
+        let mangasComprobados=0;
+        const totalMangas = mangas.length;
+        browser = await launch();
+
+        //comprobar si hay un nuevo capitulo en cada manga
+        for (let manga of mangas) {
+          await verificarManga(browser, manga);
+
+          mangasComprobados++;
+
+          // Calcular el porcentaje y la barra de progreso
+          const porcentaje = Math.round((mangasComprobados / totalMangas) * 100);
+          const progreso = Math.floor(porcentaje / 10); // Cada 10% un bloque
+          const barra = "█".repeat(progreso) + "░".repeat(10 - progreso); // Lleno vs vacío
+
+          // Actualizar el mensaje de progreso cada ciertos mangas para no sobrecargar
+          if (mangasComprobados % 2 === 0 || mangasComprobados === totalMangas) {
+            await interaction.editReply(`Comprobando... [${barra}] ${porcentaje}% (${mangasComprobados}/${totalMangas})`);
+          }
+        }
       }catch(error){
         console.error(error);
         await interaction.reply('Hubo un error al comprobar el manga. '+error);
+      }finally {
+        await browser.close();
       }
       break;
   }
