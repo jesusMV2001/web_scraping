@@ -8,7 +8,7 @@ crearTablas();
 iniciarServidor();
 
 
-async function verificarNuevosCapitulos() {
+export async function verificarNuevosCapitulos() {
     //obtener todos los mangas de la bd
     const mangas = await fetchData(`SELECT * FROM manga`);
 

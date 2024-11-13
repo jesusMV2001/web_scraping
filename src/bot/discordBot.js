@@ -1,6 +1,7 @@
 import { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder  } from 'discord.js';
 import CREDENCIALES from '../../credencialesBot.json' with {type: "json"}
 import { executeQuery, fetchData } from '../db/database.js';
+import {verificarNuevosCapitulos} from "../index.js";
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] });
 const TOKEN = CREDENCIALES.TOKEN;
@@ -49,6 +50,9 @@ const commands = [
   new SlashCommandBuilder()
       .setName('verseguidos')
       .setDescription('ver todos los mangas disponibles'),
+  new SlashCommandBuilder()
+      .setName('comprobar')
+      .setDescription('Comprueba si ha salido algun episodio nuevo'),
   new SlashCommandBuilder()
     .setName("follow")
     .setDescription('seguir un manga de la base de datos')
@@ -214,13 +218,24 @@ client.on('interactionCreate', async interaction => {
         const mangas = await fetchData(`SELECT * FROM manga_usuario WHERE usuario_id=?`,[userId]);
 
         // Formatea los resultados en un solo mensaje
-        const mensaje = mangas.map(manga => `URL: ${manga.manga_url}`).join('\n');
+        const mensaje = mangas.map(manga => `URL: ${manga.url}`).join('\n');
 
         // Envía el mensaje en Discord
         await interaction.reply(mensaje || 'No sigues ningún manga.');
       } catch (error) {
         console.error(error);
         await interaction.reply('Hubo un error al mostrar los mangas. '+error);
+      }
+      break;
+
+    case 'comprobar':
+      try {
+        verificarNuevosCapitulos()
+            .then(interaction.reply("Se van a comprobar todos los mangas de la base de datos, esto puede tardar un poco." +
+                " Si hay algun episodio nuevo se notificará."));
+      }catch(error){
+        console.error(error);
+        await interaction.reply('Hubo un error al comprobar el manga. '+error);
       }
       break;
   }
