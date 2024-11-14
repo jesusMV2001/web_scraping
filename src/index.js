@@ -3,6 +3,7 @@ import { iniciarServidor } from "./api/api.js";
 import { comprobarUltimoCapitulo } from "./scraper/scraper.js"
 import { enviarNotificacion } from "./bot/discordBot.js";
 import {launch} from "puppeteer";
+import * as dotenv from 'dotenv';
 
 // Metodos de iniciación
 crearTablas();
@@ -29,7 +30,7 @@ export async function verificarNuevosCapitulos() {
     let browser;
 
     try {
-        browser = await launch()
+        browser = await launch({headless:true});
 
         const scrapingPromesas = mangas.map(async (manga) =>{
             await verificarManga(browser, manga);

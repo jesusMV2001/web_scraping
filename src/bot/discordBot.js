@@ -1,6 +1,5 @@
 import { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder  } from 'discord.js';
 import { executeQuery, fetchData } from '../db/database.js';
-import {comprobarUltimoCapitulo} from "../scraper/scraper.js";
 import {verificarManga} from "../index.js";
 import {launch} from "puppeteer";
 
@@ -28,6 +27,9 @@ export async function enviarNotificacion(url, ultimoCap, usuarios) {
 
 const commands = [
   new SlashCommandBuilder()
+      .setName('comandos')
+      .setDescription('Muestra todos los comandos del bot.'),
+  new SlashCommandBuilder()
     .setName('añadirmanga')
     .setDescription('Añadir un nuevo manga a la base de datos')
     .addStringOption(option => 
@@ -47,23 +49,23 @@ const commands = [
         .setRequired(true)),
   new SlashCommandBuilder()
     .setName('vermangas')
-    .setDescription('ver todos los mangas disponibles'),
+    .setDescription('Ver todos los mangas disponibles en la base de datos'),
   new SlashCommandBuilder()
       .setName('verseguidos')
-      .setDescription('ver todos los mangas disponibles'),
+      .setDescription('Ver todos los mangas que sigue el usuario'),
   new SlashCommandBuilder()
       .setName('comprobar')
       .setDescription('Comprueba si ha salido algun episodio nuevo'),
   new SlashCommandBuilder()
     .setName("follow")
-    .setDescription('seguir un manga de la base de datos')
+    .setDescription('Seguir un manga para recibir notificaciones')
     .addStringOption(option =>
       option.setName('url')
         .setDescription('URL del manga a seguir')
         .setRequired(true)),
   new SlashCommandBuilder()
       .setName("unfollow")
-      .setDescription('Dejar de seguir un manga en la base de datos')
+      .setDescription('Dejar de seguir un manga, para dejar de recibir notificaciones')
       .addStringOption(option =>
           option.setName('url')
               .setDescription('URL del manga')
@@ -236,7 +238,7 @@ client.on('interactionCreate', async interaction => {
         const mangas = await fetchData(`SELECT * FROM manga`);
         let mangasComprobados=0;
         const totalMangas = mangas.length;
-        browser = await launch();
+        browser = await launch({headless:true});
 
         const promesas = mangas.map(async (manga) =>{
           await verificarManga(browser, manga);
@@ -260,6 +262,19 @@ client.on('interactionCreate', async interaction => {
         await interaction.reply('Hubo un error al comprobar el manga. '+error);
       }finally {
         await browser.close();
+      }
+      break;
+
+    case 'comandos':
+      mensaje='';
+      try {
+        commands.forEach((command) => {
+          mensaje+=`/${command.name}: ${command.description}\n`;
+        })
+        await interaction.reply(mensaje);
+      }catch (error) {
+        console.error(error);
+        await interaction.reply('Hubo un error al mostrar los comandos: '+error);
       }
       break;
   }
