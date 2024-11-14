@@ -6,5 +6,9 @@
     "zonaolympus.com": {
         "css": "#name",
         "waitUntil": "networkidle2"
+    },
+    "asuracomic.net": {
+        "css": "div.pl-4.py-2.border.rounded-md.group.w-full h3.text-sm.text-white.font-medium a.block",
+        "waitUntil": "networkidle2"
     }
 }

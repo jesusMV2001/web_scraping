@@ -2,6 +2,7 @@ import { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder  } from 'd
 import { executeQuery, fetchData } from '../db/database.js';
 import {verificarManga} from "../index.js";
 import {launch} from "puppeteer";
+import CSSKey from '../scraper/CSSKey.json' with { type: "json"};
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] });
 const TOKEN = process.env.TOKEN
@@ -26,6 +27,9 @@ export async function enviarNotificacion(url, ultimoCap, usuarios) {
 }
 
 const commands = [
+  new SlashCommandBuilder()
+      .setName('paginas')
+      .setDescription('Lista de paginas soportadas por el bot.'),
   new SlashCommandBuilder()
       .setName('comandos')
       .setDescription('Muestra todos los comandos del bot.'),
@@ -275,6 +279,19 @@ client.on('interactionCreate', async interaction => {
       }catch (error) {
         console.error(error);
         await interaction.reply('Hubo un error al mostrar los comandos: '+error);
+      }
+      break;
+
+    case 'paginas':
+      mensaje='';
+      try {
+        for (const pag in CSSKey) {
+          mensaje+=`${pag}, `;
+        }
+        await interaction.reply(mensaje);
+      }catch (error) {
+        console.error(error);
+        await interaction.reply('Hubo un error al mostrar las páginas: '+error);
       }
       break;
   }
