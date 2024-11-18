@@ -7,7 +7,8 @@ export async function comprobarUltimoCapitulo(page, url) {
         const ultimoCap = await page.$eval(CSSKey[nombrePag].css, el => el.textContent);
         return ultimoCap.match(/\d+(\.\d+)?/)[0];
     } catch (error) {
-        console.log(error);
+        console.error("URL DEL MANGA: "+url)
+        console.log(error.message);
         return "-1";
     }
 }

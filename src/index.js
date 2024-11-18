@@ -47,4 +47,5 @@ export async function verificarNuevosCapitulos() {
 
 
 // llama a la funcion cada hora
+verificarNuevosCapitulos();
 setInterval(verificarNuevosCapitulos, 1000 * 60 * 60);
